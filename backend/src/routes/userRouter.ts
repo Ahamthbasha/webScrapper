@@ -1,16 +1,18 @@
 import { Router } from 'express';
-import validateRequest from '../validator/validateRequest'; 
-import { 
-  registerValidator, 
-  loginValidator, 
-  otpValidator, 
-  resendOTPValidator 
+import validateRequest from '../validator/validateRequest';
+import {
+  registerValidator,
+  loginValidator,
+  otpValidator,
+  resendOTPValidator,
 } from '../validator/authValidator';
+import { paginationValidator, storyIdValidator } from '../validator/storyValidator';
 import container from '../dependencyInjector/container';
 
 const router = Router();
 const { authController, authMiddleware, storyController } = container;
 
+// Auth routes
 router.post(
   '/register',
   registerValidator,
@@ -45,14 +47,18 @@ router.post(
   authController.logout.bind(authController)
 );
 
-// Story routes with meaningful parameter names
+// Story routes
 router.get(
   '/stories',
+  paginationValidator,
+  validateRequest,
   storyController.getAllStories.bind(storyController)
 );
 
 router.get(
   '/stories/:storyId',
+  storyIdValidator,
+  validateRequest,
   storyController.getStoryById.bind(storyController)
 );
 
@@ -65,12 +71,16 @@ router.post(
 router.post(
   '/stories/:storyId/bookmark',
   authMiddleware.authenticate.bind(authMiddleware),
+  storyIdValidator,
+  validateRequest,
   storyController.toggleBookmark.bind(storyController)
 );
 
 router.get(
   '/bookmarks',
   authMiddleware.authenticate.bind(authMiddleware),
+  paginationValidator,
+  validateRequest,
   storyController.getBookmarks.bind(storyController)
 );
 

@@ -6,7 +6,7 @@ export interface IStory extends Document {
   points: number;
   author: string;
   postedAt: Date;
-  storyId: number; // Original HN story ID
+  storyId: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,7 +54,6 @@ const storySchema = new Schema<IStory>(
   }
 );
 
-// Create compound index for efficient queries
 storySchema.index({ points: -1 });
 storySchema.index({ postedAt: -1 });
 

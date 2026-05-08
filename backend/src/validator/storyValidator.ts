@@ -1,4 +1,4 @@
-import {  query, param } from 'express-validator';
+import { query, param } from 'express-validator';
 
 export const paginationValidator = [
   query('page')
