@@ -18,6 +18,9 @@ export class OTPService {
       await OTP.deleteMany({ email });
 
       const otp = this.generateOTP();
+
+      console.log('otp generated',otp)
+
       const expiresAt = new Date(Date.now() + 60 * 1000);
 
       await OTP.create({
