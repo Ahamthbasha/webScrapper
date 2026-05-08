@@ -1,4 +1,4 @@
-import { Heart, Globe, Mail, } from "lucide-react";
+import {Globe, Mail, } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -17,8 +17,7 @@ const Footer = () => {
           </div>
 
           <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span>Built with</span>
-            <Heart className="h-4 w-4 text-red-500 fill-current animate-pulse" />
+            <span>Built</span>
             <span>by</span>
             <span className="font-semibold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
               Ahamathbasha
