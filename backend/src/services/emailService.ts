@@ -74,9 +74,9 @@ export class EmailService {
       const mailOptions = {
         to: email,
         from: `"${this.fromName}" <${this.fromEmail}>`,
-        subject: 'Welcome to Web Scrapper! 🎉',
+        subject: 'Welcome to Web Scrapper! 🕷️',
         html: this.getWelcomeEmailTemplate(name, frontendUrl),
-        text: `Welcome ${name}! Your account has been successfully verified. Login to start scanning resumes: ${frontendUrl}/login`,
+        text: `Welcome ${name}! Your account has been successfully verified. Login to start scraping the web: ${frontendUrl}/login`,
       };
 
       await this.transporter.sendMail(mailOptions);
@@ -116,7 +116,7 @@ export class EmailService {
           </div>
           <div class="content">
             <p style="font-size: 18px; margin-bottom: 20px;">Hello,</p>
-            <p>Your OTP for registration is:</p>
+            <p>To complete your registration and start scraping the web, use the OTP below:</p>
             <div class="otp-container">
               <div class="otp-code">${otp}</div>
             </div>
@@ -157,19 +157,20 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎉 Welcome, ${name}!</h1>
+            <h1>🕷️ Welcome, ${name}!</h1>
             <p>Your email has been verified successfully</p>
           </div>
           <div class="content">
-            <p class="welcome-message">Your account is now active and ready to use!</p>
+            <p class="welcome-message">Your Web Scrapper account is now active and ready to crawl!</p>
             <div class="features">
-              <div class="feature-item">📄 Scan Resumes</div>
-              <div class="feature-item">🔍 Extract Skills</div>
-              <div class="feature-item">📊 Get Insights</div>
+              <div class="feature-item">🌐 Scrape Websites</div>
+              <div class="feature-item">🔍 Extract Data</div>
+              <div class="feature-item">📊 Analyze Results</div>
+              <div class="feature-item">⚙️ Schedule Crawls</div>
             </div>
             <a href="${frontendUrl}/login" class="button" style="text-decoration: none;">🚀 Go to Dashboard</a>
             <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-              Start scanning resumes and discovering insights today!
+              Start scraping websites, extracting structured data, and turning the web into insights — all in one place.
             </p>
           </div>
           <div class="footer">
