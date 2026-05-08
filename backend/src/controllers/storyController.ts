@@ -43,6 +43,8 @@ export class StoryController {
     }
   };
 
+  
+
   getStoryById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // storyId is guaranteed a valid MongoId by storyIdValidator at the route level

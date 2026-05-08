@@ -50,10 +50,13 @@ router.post(
 // Story routes
 router.get(
   '/stories',
+  authMiddleware.authenticateOptional.bind(authMiddleware),
   paginationValidator,
   validateRequest,
   storyController.getAllStories.bind(storyController)
 );
+
+
 
 router.get(
   '/stories/:storyId',

@@ -178,6 +178,97 @@ export class AuthMiddleware {
       next(error);
     }
   };
+
+  // In authMiddleware.ts
+authenticateOptional = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const accessToken = req.cookies?.accessToken || req.cookies?.adminAccessToken;
+    const refreshToken = req.cookies?.refreshToken || req.cookies?.adminRefreshToken;
+
+    // If no tokens, just continue without user
+    if (!accessToken && !refreshToken) {
+      return next();
+    }
+
+    if (accessToken) {
+      try {
+        const payload = this.jwtService.verifyAccessToken(accessToken);
+        
+        if (payload.role === 'admin' && payload.userId === this.ADMIN_ID) {
+          req.user = {
+            userId: payload.userId,
+            email: payload.email,
+            role: payload.role,
+          };
+          return next();
+        }
+
+        const user = await User.findById(payload.userId);
+        
+        if (user && user.isActive) {
+          req.user = {
+            userId: payload.userId,
+            email: payload.email,
+            role: payload.role,
+          };
+        }
+        
+        return next();
+      } catch (accessTokenError) {
+        // Token invalid, try refresh token
+      }
+    }
+
+    if (refreshToken) {
+      try {
+        const refreshPayload = this.jwtService.verifyRefreshToken(refreshToken);
+        
+        if (refreshPayload.role === 'admin' && refreshPayload.userId === this.ADMIN_ID) {
+          const newAccessToken = this.jwtService.generateAccessToken({
+            userId: refreshPayload.userId,
+            email: refreshPayload.email,
+            role: refreshPayload.role,
+          });
+          
+          res.cookie('adminAccessToken', newAccessToken, getCookieOptions(15 * 60 * 1000));
+          
+          req.user = {
+            userId: refreshPayload.userId,
+            email: refreshPayload.email,
+            role: refreshPayload.role,
+          };
+          return next();
+        }
+        
+        const user = await User.findById(refreshPayload.userId);
+        
+        if (user && user.isActive) {
+          const newAccessToken = this.jwtService.generateAccessToken({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+          });
+          
+          res.cookie('accessToken', newAccessToken, getCookieOptions(15 * 60 * 1000));
+          req.user = {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+          };
+        }
+        
+        return next();
+      } catch (refreshTokenError) {
+        // Token invalid, continue without user
+        return next();
+      }
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
 }
 
 export default AuthMiddleware;
