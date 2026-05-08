@@ -138,7 +138,7 @@ export class AuthService {
     }).select('+password');
 
     if (!user) {
-      throw new AppError('Invalid email or password', 401);
+      throw new AppError('This email is not registered. Please sign up first.', 401);
     }
 
     // Check if user is active
@@ -149,7 +149,7 @@ export class AuthService {
     // Verify password
     const isPasswordValid = await user.comparePassword(data.password);
     if (!isPasswordValid) {
-      throw new AppError('Invalid email or password', 401);
+      throw new AppError('Invalid password.Please try again', 401);
     }
 
     // Generate tokens
