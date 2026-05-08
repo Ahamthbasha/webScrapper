@@ -11,6 +11,7 @@ export interface Story {
   storyId: number;
   createdAt: string;
   updatedAt: string;
+  isBookmarked?:boolean;
 }
 
 export interface PaginatedResponse {

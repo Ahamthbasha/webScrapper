@@ -10,7 +10,7 @@ export interface PaginationOptions {
 }
 
 export class StoryService {
-  async getAllStories(options: PaginationOptions) {
+  async getAllStories(options: PaginationOptions,userId?:string) {
     const { page, limit, sortBy = 'points', sortOrder = 'desc' } = options;
     const skip = (page - 1) * limit;
 
@@ -22,8 +22,28 @@ export class StoryService {
       Story.countDocuments(),
     ]);
 
+      // If user is logged in, get their bookmarks for these stories
+  let bookmarkedStoryIds = new Set<string>();
+  if (userId) {
+    const storyIds = stories.map(story => story._id);
+    const bookmarks = await Bookmark.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      storyId: { $in: storyIds }
+    }).select('storyId').lean();
+    
+    bookmarkedStoryIds = new Set(
+      bookmarks.map(b => b.storyId.toString())
+    );
+  }
+
+  // Add isBookmarked flag to each story
+  const storiesWithBookmarkStatus = stories.map(story => ({
+    ...story,
+    isBookmarked: bookmarkedStoryIds.has(story._id.toString())
+  }));
+
     return {
-      stories,
+      stories:storiesWithBookmarkStatus,
       pagination: {
         page,
         limit,

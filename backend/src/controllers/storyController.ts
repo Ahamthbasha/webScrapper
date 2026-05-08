@@ -23,7 +23,7 @@ export class StoryController {
     }
   };
 
-  getAllStories = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getAllStories = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Validation is fully handled by paginationValidator at the route level
       const page = parseInt(req.query.page as string) || 1;
@@ -31,7 +31,8 @@ export class StoryController {
       const sortBy = (req.query.sortBy as string) || 'points';
       const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc';
 
-      const result = await this.storyService.getAllStories({ page, limit, sortBy, sortOrder });
+      const userId = req.user?.userId
+      const result = await this.storyService.getAllStories({ page, limit, sortBy, sortOrder },userId);
 
       res.status(200).json({
         success: true,

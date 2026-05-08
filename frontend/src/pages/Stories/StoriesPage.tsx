@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { type RootState } from '../../redux/store';
-import { getAllStories, toggleBookmark, scrapeStories, getBookmarks, type Story } from '../../api/action/userAction';
+import { getAllStories, toggleBookmark, scrapeStories, type Story } from '../../api/action/userAction';
 import { toast } from 'react-toastify';
 import { RefreshCw, ExternalLink, Clock, User, Star, Loader } from 'lucide-react';
 
@@ -12,14 +12,15 @@ const StoriesPage = () => {
   const [scraping, setScraping] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [bookmarkedStories, setBookmarkedStories] = useState<Set<string>>(new Set());
+  
+  // Remove bookmarkedStories state since we'll use story.isBookmarked
 
   const isLoggedIn = useSelector((state: RootState) => !!state.user.userId);
   const navigate = useNavigate();
   
-  const ITEMS_PER_PAGE = 10; // Changed from 20 to 10
+  const ITEMS_PER_PAGE = 10;
 
-  // Effect 1 — load paginated stories (public, no auth needed)
+  // Load paginated stories (bookmark status included from backend)
   useEffect(() => {
     let cancelled = false;
 
@@ -43,33 +44,7 @@ const StoriesPage = () => {
 
     load();
     return () => { cancelled = true; };
-  }, [page]);
-
-  // Combined effect — fetch bookmarked IDs when logged in OR clear when logged out
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadBookmarkStatuses = async () => {
-      // If user is not logged in, clear bookmarks and return early
-      if (!isLoggedIn) {
-        setBookmarkedStories(new Set());
-        return;
-      }
-
-      try {
-        const response = await getBookmarks(1, 100);
-        if (!cancelled && response.success) {
-          const ids = new Set<string>(response.data.stories.map((s: Story) => s._id));
-          setBookmarkedStories(ids);
-        }
-      } catch (error) {
-        if (!cancelled) console.error('Error fetching bookmark statuses:', error);
-      }
-    };
-
-    loadBookmarkStatuses();
-    return () => { cancelled = true; };
-  }, [isLoggedIn]);
+  }, [page, isLoggedIn]); // Re-fetch when login status changes (so bookmark status updates)
 
   const handleScrape = async () => {
     if (!isLoggedIn) {
@@ -82,7 +57,12 @@ const StoriesPage = () => {
       const response = await scrapeStories();
       if (response.success) {
         toast.success(response.message);
-        setPage(1);
+        // Refresh the current page to show new stories
+        const refreshedStories = await getAllStories(page, ITEMS_PER_PAGE);
+        if (refreshedStories.success) {
+          setStories(refreshedStories.data.stories);
+          setTotalPages(refreshedStories.data.pagination.totalPages);
+        }
       }
     } catch (error) {
       console.error('Error scraping stories:', error);
@@ -93,7 +73,6 @@ const StoriesPage = () => {
   };
 
   const handleBookmark = async (storyId: string) => {
-    // Not logged in — redirect to login instead of showing a toast
     if (!isLoggedIn) {
       navigate('/login');
       return;
@@ -102,17 +81,16 @@ const StoriesPage = () => {
     try {
       const response = await toggleBookmark(storyId);
       if (response.success) {
-        if (response.data.bookmarked) {
-          setBookmarkedStories(prev => new Set([...prev, storyId]));
-          toast.success('Story bookmarked');
-        } else {
-          setBookmarkedStories(prev => {
-            const next = new Set(prev);
-            next.delete(storyId);
-            return next;
-          });
-          toast.success('Bookmark removed');
-        }
+        // Update the local state by toggling the isBookmarked flag
+        setStories(prevStories => 
+          prevStories.map(story => 
+            story._id === storyId 
+              ? { ...story, isBookmarked: response.data.bookmarked }
+              : story
+          )
+        );
+        
+        toast.success(response.data.bookmarked ? 'Story bookmarked' : 'Bookmark removed');
       }
     } catch (error) {
       console.error('Error toggling bookmark:', error);
@@ -229,17 +207,17 @@ const StoriesPage = () => {
                       </div>
                     </div>
 
-                    {/* Bookmark button — visible to all, redirects guests to login */}
+                    {/* Bookmark button - now using story.isBookmarked */}
                     <button
                       onClick={() => handleBookmark(story._id)}
                       className="ml-4 p-2 rounded-lg hover:bg-gray-700 transition-colors group"
                       title={isLoggedIn
-                        ? (bookmarkedStories.has(story._id) ? 'Remove bookmark' : 'Bookmark story')
+                        ? (story.isBookmarked ? 'Remove bookmark' : 'Bookmark story')
                         : 'Login to bookmark'}
                     >
                       <Star
                         className={`h-6 w-6 transition-colors ${
-                          isLoggedIn && bookmarkedStories.has(story._id)
+                          isLoggedIn && story.isBookmarked
                             ? 'fill-emerald-500 text-emerald-500'
                             : 'text-gray-500 group-hover:text-emerald-400'
                         }`}
