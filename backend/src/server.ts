@@ -52,7 +52,7 @@ const startServer = async () => {
     await initializeDatabase();
     
     // Auto-scrape on server start
-    console.log('🕷️ Starting initial web scrape...');
+    console.log('Starting initial web scrape...');
     try {
       
       const result = await scraperService.scrapeAndSave();
